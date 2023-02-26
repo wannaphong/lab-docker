@@ -138,7 +138,6 @@ RUN pip install psutil \
         sphinx_rtd_theme \
         scipy \
         numpy \
-        sklearn \
         scikit-learn \
         nvidia-ml-py3 \
         mpi4py \
