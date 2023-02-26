@@ -170,13 +170,14 @@ RUN rm -rf /usr/lib/python3/dist-packages/yaml && \
 ##############################################################################
 # DeepSpeed
 ##############################################################################
-RUN git clone https://github.com/microsoft/DeepSpeed.git ${STAGE_DIR}/DeepSpeed
+# RUN git clone https://github.com/microsoft/DeepSpeed.git ${STAGE_DIR}/DeepSpeed
 RUN pip install triton==1.0.0
-RUN cd ${STAGE_DIR}/DeepSpeed && \
-    git checkout . && \
-    git checkout master && \
-    DS_BUILD_OPS=1 pip install .
-RUN rm -rf ${STAGE_DIR}/DeepSpeed
+# RUN cd ${STAGE_DIR}/DeepSpeed && \
+#     git checkout . && \
+#     git checkout master && \
+#     DS_BUILD_OPS=1 pip install .
+# RUN rm -rf ${STAGE_DIR}/DeepSpeed
+RUN DS_BUILD_OPS=1 pip install DeepSpeed==0.8.0
 RUN python -c "import deepspeed; print(deepspeed.__version__)" && ds_report
 
 WORKDIR /workspace
