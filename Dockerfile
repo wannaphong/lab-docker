@@ -185,7 +185,7 @@ RUN pip install triton==2.1.0
 #     git checkout master && \
 #     DS_BUILD_OPS=1 pip install .
 # RUN rm -rf ${STAGE_DIR}/DeepSpeed
-RUN DS_BUILD_OPS=1 pip install DeepSpeed==0.11.1
+# RUN DS_BUILD_OPS=1 pip install DeepSpeed==0.11.1
 # RUN python -c "import deepspeed; print(deepspeed.__version__)" && ds_report
 
 WORKDIR /workspace
