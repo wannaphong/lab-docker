@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.7.1-devel-ubuntu20.04
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 RUN ["/bin/bash", "-c", "echo I am using bash"]
 SHELL ["/bin/bash", "-c"]
@@ -8,6 +8,8 @@ SHELL ["/bin/bash", "-c"]
 ENV STAGE_DIR=/tmp
 RUN mkdir -p ${STAGE_DIR}
 
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 ##############################################################################
 # Installation/Basic Utilities
 ##############################################################################
@@ -39,57 +41,63 @@ RUN echo "ClientAliveInterval 30" >> /etc/ssh/sshd_config
 RUN cp /etc/ssh/sshd_config ${STAGE_DIR}/sshd_config && \
     sed "0,/^#Port 22/s//Port 22/" ${STAGE_DIR}/sshd_config > /etc/ssh/sshd_config
 
-##############################################################################
-# Mellanox OFED
-##############################################################################
-ENV MLNX_OFED_VERSION=5.7-1.0.2.0
-RUN apt-get install -y libnuma-dev
-RUN cd ${STAGE_DIR} && \
-    wget -q -O - http://www.mellanox.com/downloads/ofed/MLNX_OFED-${MLNX_OFED_VERSION}/MLNX_OFED_LINUX-${MLNX_OFED_VERSION}-ubuntu20.04-x86_64.tgz | tar xzf - && \
-    cd MLNX_OFED_LINUX-${MLNX_OFED_VERSION}-ubuntu20.04-x86_64 && \
-    ./mlnxofedinstall --user-space-only --without-fw-update --all -q && \
-    cd ${STAGE_DIR} && \
-    rm -rf ${STAGE_DIR}/MLNX_OFED_LINUX-${MLNX_OFED_VERSION}-ubuntu20.04-x86_64*
+# ##############################################################################
+# # Mellanox OFED
+# ##############################################################################
+# ENV MLNX_OFED_VERSION=5.7-1.0.2.0
+# RUN apt-get install -y libnuma-dev
+# RUN cd ${STAGE_DIR} && \
+#     wget -q -O - http://www.mellanox.com/downloads/ofed/MLNX_OFED-${MLNX_OFED_VERSION}/MLNX_OFED_LINUX-${MLNX_OFED_VERSION}-ubuntu20.04-x86_64.tgz | tar xzf - && \
+#     cd MLNX_OFED_LINUX-${MLNX_OFED_VERSION}-ubuntu20.04-x86_64 && \
+#     ./mlnxofedinstall --user-space-only --without-fw-update --all -q && \
+#     cd ${STAGE_DIR} && \
+#     rm -rf ${STAGE_DIR}/MLNX_OFED_LINUX-${MLNX_OFED_VERSION}-ubuntu20.04-x86_64*
 
 ##############################################################################
 # nv_peer_mem
 ##############################################################################
-ENV NV_PEER_MEM_VERSION=1.3
-ENV NV_PEER_MEM_TAG=1.3-0
-RUN mkdir -p ${STAGE_DIR} && \
-    git clone https://github.com/Mellanox/nv_peer_memory.git --branch ${NV_PEER_MEM_TAG} ${STAGE_DIR}/nv_peer_memory && \
-    cd ${STAGE_DIR}/nv_peer_memory && \
-    ./build_module.sh && \
-    cd ${STAGE_DIR} && \
-    tar xzf ${STAGE_DIR}/nvidia-peer-memory_${NV_PEER_MEM_VERSION}.orig.tar.gz && \
-    cd ${STAGE_DIR}/nvidia-peer-memory-${NV_PEER_MEM_VERSION} && \
-    apt-get update && \
-    apt-get install -y dkms && \
-    dpkg-buildpackage -us -uc && \
-    dpkg -i ${STAGE_DIR}/nvidia-peer-memory_1.2-0_all.deb
+# ENV NV_PEER_MEM_VERSION=1.3
+# ENV NV_PEER_MEM_TAG=1.3-0
+# RUN mkdir -p ${STAGE_DIR} && \
+#     git clone https://github.com/Mellanox/nv_peer_memory.git --branch ${NV_PEER_MEM_TAG} ${STAGE_DIR}/nv_peer_memory && \
+#     cd ${STAGE_DIR}/nv_peer_memory && \
+#     ./build_module.sh && \
+#     cd ${STAGE_DIR} && \
+#     tar xzf ${STAGE_DIR}/nvidia-peer-memory_${NV_PEER_MEM_VERSION}.orig.tar.gz && \
+#     cd ${STAGE_DIR}/nvidia-peer-memory-${NV_PEER_MEM_VERSION} && \
+#     apt-get update && \
+#     apt-get install -y dkms && \
+#     dpkg-buildpackage -us -uc && \
+#     dpkg -i ${STAGE_DIR}/nvidia-peer-memory_1.2-0_all.deb
 
 ##############################################################################
 # OPENMPI
 ##############################################################################
-ENV OPENMPI_BASEVERSION=4.1
-ENV OPENMPI_VERSION=${OPENMPI_BASEVERSION}.4
-RUN cd ${STAGE_DIR} && \
-    wget -q -O - https://download.open-mpi.org/release/open-mpi/v${OPENMPI_BASEVERSION}/openmpi-${OPENMPI_VERSION}.tar.gz | tar xzf - && \
-    cd openmpi-${OPENMPI_VERSION} && \
-    ./configure --prefix=/usr/local/openmpi-${OPENMPI_VERSION} && \
-    make -j"$(nproc)" install && \
-    ln -s /usr/local/openmpi-${OPENMPI_VERSION} /usr/local/mpi && \
-    # Sanity check:
-    test -f /usr/local/mpi/bin/mpic++ && \
-    cd ${STAGE_DIR} && \
-    rm -r ${STAGE_DIR}/openmpi-${OPENMPI_VERSION}
-ENV PATH=/usr/local/mpi/bin:${PATH} \
-        LD_LIBRARY_PATH=/usr/local/lib:/usr/local/mpi/lib:/usr/local/mpi/lib64:${LD_LIBRARY_PATH}
-# Create a wrapper for OpenMPI to allow running as root by default
-RUN mv /usr/local/mpi/bin/mpirun /usr/local/mpi/bin/mpirun.real && \
-    echo '#!/bin/bash' > /usr/local/mpi/bin/mpirun && \
-    echo 'mpirun.real --allow-run-as-root --prefix /usr/local/mpi "$@"' >> /usr/local/mpi/bin/mpirun && \
-    chmod a+x /usr/local/mpi/bin/mpirun
+RUN apt-get --yes -qq update \
+ && apt-get --yes -qq upgrade \
+ && apt-get --yes -qq install \
+                      bzip2 \
+                      cmake \
+                      cpio \
+                      curl \
+                      g++ \
+                      gcc \
+                      gfortran \
+                      git \
+                      gosu \
+                      libblas-dev \
+                      liblapack-dev \
+                      libopenmpi-dev \
+                      openmpi-bin \
+                      python3-dev \
+                      python3-pip \
+                      virtualenv \
+                      wget \
+                      zlib1g-dev \
+                      vim       \
+                      htop      \
+ && apt-get --yes -qq clean \
+ && rm -rf /var/lib/apt/lists/*
 
 ##############################################################################
 # Python
@@ -153,8 +161,8 @@ RUN cat /etc/ssh/sshd_config > ${STAGE_DIR}/sshd_config && \
 ##############################################################################
 # PyTorch
 ##############################################################################
-ENV PYTORCH_VERSION=1.13.1
-ENV TORCHVISION_VERSION=0.14.1
+ENV PYTORCH_VERSION=2.1.0
+ENV TORCHVISION_VERSION=0.16.0
 ENV TENSORBOARDX_VERSION=2.6
 RUN pip install torch==${PYTORCH_VERSION}
 RUN pip install torchvision==${TORCHVISION_VERSION}
@@ -171,14 +179,14 @@ RUN rm -rf /usr/lib/python3/dist-packages/yaml && \
 # DeepSpeed
 ##############################################################################
 # RUN git clone https://github.com/microsoft/DeepSpeed.git ${STAGE_DIR}/DeepSpeed
-RUN pip install triton==1.0.0
+RUN pip install triton==2.1.0
 # RUN cd ${STAGE_DIR}/DeepSpeed && \
 #     git checkout . && \
 #     git checkout master && \
 #     DS_BUILD_OPS=1 pip install .
 # RUN rm -rf ${STAGE_DIR}/DeepSpeed
-RUN DS_BUILD_OPS=1 pip install DeepSpeed==0.8.0
-RUN python -c "import deepspeed; print(deepspeed.__version__)" && ds_report
+RUN DS_BUILD_OPS=1 pip install DeepSpeed==0.11.1
+# RUN python -c "import deepspeed; print(deepspeed.__version__)" && ds_report
 
 WORKDIR /workspace
 RUN echo I am using bash, which is now the default
