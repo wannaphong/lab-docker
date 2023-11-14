@@ -180,7 +180,7 @@ RUN rm -rf /usr/lib/python3/dist-packages/yaml && \
 ##############################################################################
 RUN git clone https://github.com/nvidia/apex
 WORKDIR ./apex
-RUN pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+RUN pip install -v --disable-pip-version-check --no-cache-dir --no-build-isolation --config-settings "--build-option=--cpp_ext" --config-settings "--build-option=--cuda_ext" ./
 # RUN git clone https://github.com/microsoft/DeepSpeed.git ${STAGE_DIR}/DeepSpeed
 RUN pip install triton==2.1.0
 # RUN cd ${STAGE_DIR}/DeepSpeed && \
