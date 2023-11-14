@@ -178,7 +178,7 @@ RUN rm -rf /usr/lib/python3/dist-packages/yaml && \
 ##############################################################################
 # DeepSpeed
 ##############################################################################
-RUN git clone https://github.com/qywu/apex
+RUN git clone https://github.com/nvidia/apex
 WORKDIR ./apex
 RUN pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
 # RUN git clone https://github.com/microsoft/DeepSpeed.git ${STAGE_DIR}/DeepSpeed
