@@ -164,8 +164,7 @@ RUN cat /etc/ssh/sshd_config > ${STAGE_DIR}/sshd_config && \
 ENV PYTORCH_VERSION=2.1.0
 ENV TORCHVISION_VERSION=0.16.0
 ENV TENSORBOARDX_VERSION=2.6
-RUN pip install torch==${PYTORCH_VERSION}
-RUN pip install torchvision==${TORCHVISION_VERSION}
+RUN pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118
 RUN pip install tensorboardX==${TENSORBOARDX_VERSION}
 
 ##############################################################################
