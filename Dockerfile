@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
 
 RUN ["/bin/bash", "-c", "echo I am using bash"]
 SHELL ["/bin/bash", "-c"]
@@ -161,11 +161,12 @@ RUN cat /etc/ssh/sshd_config > ${STAGE_DIR}/sshd_config && \
 ##############################################################################
 # PyTorch
 ##############################################################################
-ENV PYTORCH_VERSION=2.1.0
+ENV PYTORCH_VERSION=2.3.1
 ENV TORCHVISION_VERSION=0.16.0
 ENV TENSORBOARDX_VERSION=2.6
-RUN pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118
-RUN pip install tensorboardX==${TENSORBOARDX_VERSION}
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+RUN pip install tensorboardX
+#==${TENSORBOARDX_VERSION}
 
 ##############################################################################
 # PyYAML build issue
@@ -187,7 +188,8 @@ RUN pip install triton==2.1.0
 #     git checkout master && \
 #     DS_BUILD_OPS=1 pip install .
 # RUN rm -rf ${STAGE_DIR}/DeepSpeed
-RUN pip install deepspeed==0.12.3
+RUN pip install deepspeed
+#==0.12.3
 # RUN python -c "import deepspeed; print(deepspeed.__version__)" && ds_report
 
 WORKDIR /workspace
